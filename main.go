@@ -14,9 +14,9 @@ import (
 
 var (
 	token    string
-	pontosBi int        = 96
-	pontosKi int        = 70
-	mutex    sync.Mutex // Use um mutex para garantir acesso seguro às variáveis globais.
+	pontosBi int = 96
+	pontosKi int = 70
+	mutex    sync.Mutex
 )
 
 func init() {
@@ -36,8 +36,6 @@ func main() {
 		panic("Erro ao criar uma instância do DiscordGo: " + err.Error())
 	}
 
-	pontosKiString := fmt.Sprintf("Ki voce tem um total de: %d, pontos", pontosKi)
-
 	commands := []*discordgo.ApplicationCommand{
 		{
 			Name:        "ki",
@@ -48,13 +46,62 @@ func main() {
 			Description:   "Adicionar pontos",
 			GuildID:       "1160639300489199626",
 			ApplicationID: "980076552383508600",
-			Options: []*discordgo.ApplicationCommandOption{{
-				Type:        discordgo.ApplicationCommandOptionInteger,
-				Name:        "integer-option",
-				Description: "integer option",
-				MaxValue:    15,
-				Required:    true,
-			}},
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "Bi",
+							Value: "Bi",
+						},
+						{
+							Name:  "Ki",
+							Value: "Ki",
+						},
+					},
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "string-option",
+					Description: "Selecione a pessoa para adicionar os pontos.",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "integer-option",
+					Description: "Selecione quantos pontos voce quer adicionar.",
+					MaxValue:    15,
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:          "remove",
+			Description:   "Remover pontos",
+			GuildID:       "1160639300489199626",
+			ApplicationID: "980076552383508600",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "Bi",
+							Value: "Bi",
+						},
+						{
+							Name:  "Ki",
+							Value: "Ki",
+						},
+					},
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "string-option",
+					Description: "Selecione a pessoa para remover os pontos.",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "integer-option",
+					Description: "Selecione quantos pontos voce quer remover.",
+					MaxValue:    15,
+					Required:    true,
+				},
+			},
 		},
 		{
 			Name:        "bi",
@@ -68,12 +115,15 @@ func main() {
 
 	commandHandlers := map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"ki": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			numeroString := strconv.Itoa(pontosKi)
+
+			frase := "Ki voce tem um total de:" + numeroString
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Embeds: []*discordgo.MessageEmbed{
 						{
-							Description: pontosKiString,
+							Description: frase,
 							Title:       "Pontos",
 						},
 					},
@@ -81,7 +131,6 @@ func main() {
 			})
 		},
 		"bi": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			fmt.Println("PONTOS BIBII", pontosBi)
 			numeroString := strconv.Itoa(pontosBi)
 
 			frase := "Bi voce tem um total de:" + numeroString
@@ -97,12 +146,9 @@ func main() {
 				},
 			})
 		},
-		// ... Seus outros manipuladores de comando ...
 		"add": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			fmt.Println("oi", i.Interaction.ApplicationCommandData().Options[0])
-			points := i.Interaction.ApplicationCommandData().Options[0].Value
-
-			fmt.Println("pontos", points)
+			char := i.Interaction.ApplicationCommandData().Options[0].Value
+			points := i.Interaction.ApplicationCommandData().Options[1].Value
 
 			pointsFloat, ok := points.(float64)
 
@@ -114,11 +160,11 @@ func main() {
 
 			pontoInteiro := int(pointsFloat)
 
-			// Use o mutex para garantir acesso seguro às variáveis globais.
-			mutex.Lock()
-			pontosBi += pontoInteiro
-			println("BIBI", pontosBi)
-			mutex.Unlock()
+			if char == "Bi" {
+				pontosBi += pontoInteiro
+			} else {
+				pontosKi += pontoInteiro
+			}
 
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -126,6 +172,37 @@ func main() {
 					Embeds: []*discordgo.MessageEmbed{
 						{
 							Description: "Pontos adicionados",
+							Title:       "Pontos",
+						},
+					},
+				},
+			})
+		},
+		"remove": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			char := i.Interaction.ApplicationCommandData().Options[0].Value
+			points := i.Interaction.ApplicationCommandData().Options[1].Value
+
+			pointsFloat, ok := points.(float64)
+
+			if !ok {
+				fmt.Println("Error: 'points' is not of type 'int'")
+				return
+			}
+
+			pontoInteiro := int(pointsFloat)
+
+			if char == "Bi" {
+				pontosBi -= pontoInteiro
+			} else {
+				pontosKi -= pontoInteiro
+			}
+
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Embeds: []*discordgo.MessageEmbed{
+						{
+							Description: "Pontos removidos",
 							Title:       "Pontos",
 						},
 					},
