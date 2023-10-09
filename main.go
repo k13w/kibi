@@ -25,7 +25,17 @@ func init() {
 }
 
 func main() {
-	bitis, err := discordgo.New("Bot OTgwMDc2NTUyMzgzNTA4NjAw.GNpk9g.cMV0Sd89N1RmR0F66epQuVQ0moDUiYs5ENLH5c")
+	token := os.Getenv("DISCORD_TOKEN")
+
+	if token == "" {
+		panic("O token do Discord não foi definido na variável de ambiente DISCORD_TOKEN.")
+	}
+
+	bitis, err := discordgo.New("Bot " + token)
+	if err != nil {
+		panic("Erro ao criar uma instância do DiscordGo: " + err.Error())
+	}
+
 	pontosKiString := fmt.Sprintf("Ki voce tem um total de: %d, pontos", pontosKi)
 
 	commands := []*discordgo.ApplicationCommand{
