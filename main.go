@@ -28,7 +28,7 @@ func init() {
 }
 
 func main() {
-	token := "DISCORD_TOKEN"
+	token := "OTgwMDc2NTUyMzgzNTA4NjAw.GERydR.Ey4CEIIP8gg9-QVACwxzVxZUXJlWAZwOa-4IJQ"
 
 	if token == "" {
 		panic("O token do Discord não foi definido na variável de ambiente DISCORD_TOKEN.")
