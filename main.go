@@ -34,6 +34,8 @@ func main() {
 		panic("O token do Discord não foi definido na variável de ambiente DISCORD_TOKEN.")
 	}
 
+	print("get token sucesso")
+
 	bitis, err := discordgo.New("Bot " + token)
 	if err != nil {
 		panic("Erro ao criar uma instância do DiscordGo: " + err.Error())
@@ -42,6 +44,10 @@ func main() {
 	commands := []*discordgo.ApplicationCommand{
 		{
 			Name:        "ki",
+			Description: "Comando para mostrar quantos pontos voce tem",
+		},
+		{
+			Name:        "kiel",
 			Description: "Comando para mostrar quantos pontos voce tem",
 		},
 		{
