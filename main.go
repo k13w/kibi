@@ -1,14 +1,13 @@
 package main
 
 import (
+	"bitis/handlers"
 	"bitis/helper"
 	"flag"
-	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"log"
 	"os"
 	"os/signal"
-	"strconv"
 	"sync"
 )
 
@@ -25,7 +24,7 @@ func init() {
 }
 
 func main() {
-	token := os.Getenv("DISCORD_BOT_TOKEN")
+	token := os.Getenv("KIBI_TOKEN")
 
 	if token == "" {
 		panic("O token do Discord não foi definido na variável de ambiente DISCORD_TOKEN.")
@@ -113,122 +112,19 @@ func main() {
 		},
 	}
 
-	commandHandlers := map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"ki": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			numeroString := strconv.Itoa(pontosKi)
-
-			frase := "Ki voce tem um total de:" + numeroString
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Embeds: []*discordgo.MessageEmbed{
-						{
-							Description: frase,
-							Title:       "Pontos",
-						},
-					},
-				},
-			})
-		},
-		"bi": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			numeroString := strconv.Itoa(pontosBi)
-
-			frase := "Bi voce tem um total de:" + numeroString
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Embeds: []*discordgo.MessageEmbed{
-						{
-							Description: frase,
-							Title:       "Pontos",
-						},
-					},
-				},
-			})
-		},
-		"add": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			char := i.Interaction.ApplicationCommandData().Options[0].Value
-			points := i.Interaction.ApplicationCommandData().Options[1].Value
-
-			pointsFloat, ok := points.(float64)
-
-			if !ok {
-				// Handle the case where the assertion fails, e.g., return an error or set a default value
-				fmt.Println("Error: 'points' is not of type 'int'")
-				return
-			}
-
-			pontoInteiro := int(pointsFloat)
-
-			if char == "Bi" {
-				pontosBi += pontoInteiro
-			} else {
-				pontosKi += pontoInteiro
-			}
-
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Embeds: []*discordgo.MessageEmbed{
-						{
-							Description: "Pontos adicionados",
-							Title:       "Pontos",
-						},
-					},
-				},
-			})
-		},
-		"remove": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			char := i.Interaction.ApplicationCommandData().Options[0].Value
-			points := i.Interaction.ApplicationCommandData().Options[1].Value
-
-			pointsFloat, ok := points.(float64)
-
-			if !ok {
-				fmt.Println("Error: 'points' is not of type 'int'")
-				return
-			}
-
-			pontoInteiro := int(pointsFloat)
-
-			if char == "Bi" {
-				pontosBi -= pontoInteiro
-			} else {
-				pontosKi -= pontoInteiro
-			}
-
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Embeds: []*discordgo.MessageEmbed{
-						{
-							Description: "Pontos removidos",
-							Title:       "Pontos",
-						},
-					},
-				},
-			})
-		},
-		"bitis": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Embeds: []*discordgo.MessageEmbed{
-						{
-							Description: "Errei fui bi sem gargantilha",
-							Title:       "Bitis",
-						},
-					},
-				},
-			})
-		},
+	commandHandlers := map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate, pontosBi, pontosKi int){
+		//"ki":     handlers.HandleKi,
+		//"bi":     handlers.HandleBi,
+		"add":    handlers.HandleAddPoints,
+		"remove": handlers.HandleRemovePoints,
+		"bitis":  handlers.HandleBitis,
 	}
 	bitis.ApplicationCommandBulkOverwrite("980076552383508600", "1160639300489199626", commands)
 	helper.PanicIfError(err)
 
 	bitis.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
-			h(s, i)
+			h(s, i, pontosBi, pontosKi)
 		}
 	})
 
