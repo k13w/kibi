@@ -2,13 +2,10 @@ package main
 
 import (
 	"bitis/helper"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -114,55 +111,9 @@ func main() {
 			Name:        "bitis",
 			Description: "Voce e a coisinha mais linda",
 		},
-		{
-			Name:        "random",
-			Description: "Comando para mostrar um conceito aleatorio.",
-		},
 	}
 
 	commandHandlers := map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"random": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			apiUrl := "https://api.adviceslip.com/advice"
-
-			response, err := http.Get(apiUrl)
-			if err != nil {
-				fmt.Println("Erro ao realizar a solicitação GET:", err)
-				return
-			}
-			defer response.Body.Close()
-
-			responseBody, err := ioutil.ReadAll(response.Body)
-			if err != nil {
-				fmt.Println("Erro ao ler o corpo da resposta:", err)
-				return
-			}
-
-			type AdviceSlip struct {
-				Slip struct {
-					ID     int    `json:"id"`
-					Advice string `json:"advice"`
-				} `json:"slip"`
-			}
-
-			var adviceSlip AdviceSlip
-			err = json.Unmarshal(responseBody, &adviceSlip)
-			if err != nil {
-				fmt.Println("Erro ao decodificar o JSON:", err)
-				return
-			}
-
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Embeds: []*discordgo.MessageEmbed{
-						{
-							Description: adviceSlip.Slip.Advice,
-							Title:       "Random Advice",
-						},
-					},
-				},
-			})
-		},
 		"ki": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			numeroString := strconv.Itoa(pontosKi)
 
