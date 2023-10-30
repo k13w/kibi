@@ -2,13 +2,10 @@ package main
 
 import (
 	"bitis/helper"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -34,8 +31,6 @@ func main() {
 		panic("O token do Discord não foi definido na variável de ambiente DISCORD_TOKEN.")
 	}
 
-	print("get token sucesso")
-
 	bitis, err := discordgo.New("Bot " + token)
 	if err != nil {
 		panic("Erro ao criar uma instância do DiscordGo: " + err.Error())
@@ -45,14 +40,6 @@ func main() {
 		{
 			Name:        "ki",
 			Description: "Comando para mostrar quantos pontos voce tem",
-		},
-		{
-			Name:        "kiel",
-			Description: "Comando para mostrar quantos pontos voce tem",
-		},
-		{
-			Name:        "random",
-			Description: "Comando para mostrar um conceito aleatorio.",
 		},
 		{
 			Name:          "add",
@@ -143,48 +130,6 @@ func main() {
 				},
 			})
 		},
-		"random": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			apiUrl := "https://api.adviceslip.com/advice"
-
-			response, err := http.Get(apiUrl)
-			if err != nil {
-				fmt.Println("Erro ao realizar a solicitação GET:", err)
-				return
-			}
-			defer response.Body.Close()
-
-			responseBody, err := ioutil.ReadAll(response.Body)
-			if err != nil {
-				fmt.Println("Erro ao ler o corpo da resposta:", err)
-				return
-			}
-
-			type AdviceSlip struct {
-				Slip struct {
-					ID     int    `json:"id"`
-					Advice string `json:"advice"`
-				} `json:"slip"`
-			}
-
-			var adviceSlip AdviceSlip
-			err = json.Unmarshal(responseBody, &adviceSlip)
-			if err != nil {
-				fmt.Println("Erro ao decodificar o JSON:", err)
-				return
-			}
-
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Embeds: []*discordgo.MessageEmbed{
-						{
-							Description: adviceSlip.Slip.Advice,
-							Title:       "Random Advice",
-						},
-					},
-				},
-			})
-		},
 		"bi": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			numeroString := strconv.Itoa(pontosBi)
 
@@ -208,6 +153,7 @@ func main() {
 			pointsFloat, ok := points.(float64)
 
 			if !ok {
+				// Handle the case where the assertion fails, e.g., return an error or set a default value
 				fmt.Println("Error: 'points' is not of type 'int'")
 				return
 			}
@@ -276,19 +222,6 @@ func main() {
 				},
 			})
 		},
-		"kiel": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Embeds: []*discordgo.MessageEmbed{
-						{
-							Description: "Errei fui kiel",
-							Title:       "Kiel",
-						},
-					},
-				},
-			})
-		},
 	}
 	bitis.ApplicationCommandBulkOverwrite("980076552383508600", "1160639300489199626", commands)
 	helper.PanicIfError(err)
@@ -302,8 +235,6 @@ func main() {
 	bitis.Identify.Intents = discordgo.IntentsAllWithoutPrivileged
 
 	err = bitis.Open()
-
-	print("\n app listen")
 	helper.LogIfError(err)
 
 	defer bitis.Close()
